@@ -1,0 +1,6 @@
+@ThinkboardApi_HostAddress = http://localhost:5050
+
+GET {{ThinkboardApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

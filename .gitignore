@@ -25,3 +25,6 @@ dist-ssr
 
 
 .env
+
+backend-dotnet/bin/
+backend-dotnet/obj/
