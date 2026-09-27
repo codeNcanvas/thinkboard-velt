@@ -28,3 +28,5 @@ dist-ssr
 
 backend-dotnet/bin/
 backend-dotnet/obj/
+
+backend-dotnet/thinkboard.db
