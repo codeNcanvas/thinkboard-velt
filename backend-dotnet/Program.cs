@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ThinkboardApi.Data;
+using ThinkboardApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<ThinkboardDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddSingleton<PasswordService>();
 
 var app = builder.Build();
 
