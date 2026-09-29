@@ -13,11 +13,13 @@ public class AuthController : ControllerBase
 {
     private readonly ThinkboardDbContext _context;
     private readonly PasswordService _passwordService;
+    private readonly TokenService _tokenService;
 
-    public AuthController(ThinkboardDbContext context, PasswordService passwordService)
+    public AuthController(ThinkboardDbContext context, PasswordService passwordService, TokenService tokenService)
     {
         _context = context;
         _passwordService = passwordService;
+        _tokenService = tokenService;
     }
 
     [HttpPost("register")]
@@ -37,5 +39,16 @@ public class AuthController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(new { user.Id, user.Email });
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (user == null || !_passwordService.Verify(request.Password, user.PasswordHash))
+            return Unauthorized("Invalid email or password.");
+
+        var token = _tokenService.CreateToken(user);
+        return Ok(new { token });
     }
 }
