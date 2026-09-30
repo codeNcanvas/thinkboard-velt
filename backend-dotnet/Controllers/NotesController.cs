@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ThinkboardApi.Data;
+using ThinkboardApi.DTOs;
+using ThinkboardApi.Models;
 
 namespace ThinkboardApi.Controllers;
 
@@ -33,4 +35,19 @@ public class NotesController : ControllerBase
 
         return Ok(note);
     }
+
+    [HttpPost]
+public async Task<IActionResult> Create(CreateNoteRequest request)
+{
+    var note = new Note
+    {
+        Title = request.Title,
+        Content = request.Content
+    };
+
+    _context.Notes.Add(note);
+    await _context.SaveChangesAsync();
+
+    return CreatedAtAction(nameof(GetById), new { id = note.Id }, note);
+}
 }
