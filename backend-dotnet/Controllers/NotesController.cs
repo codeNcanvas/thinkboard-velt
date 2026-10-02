@@ -50,4 +50,34 @@ public async Task<IActionResult> Create(CreateNoteRequest request)
 
     return CreatedAtAction(nameof(GetById), new { id = note.Id }, note);
 }
+
+[HttpPut("{id}")]
+public async Task<IActionResult> Update(int id, UpdateNoteRequest request)
+{
+    var note = await _context.Notes.FindAsync(id);
+    if (note == null)
+        return NotFound();
+
+    note.Title = request.Title;
+    note.Content = request.Content;
+    note.UpdatedAt = DateTime.UtcNow;
+
+    await _context.SaveChangesAsync();
+
+    return Ok(note);
+}
+
+[HttpDelete("{id}")]
+public async Task<IActionResult> Delete(int id)
+{
+    var note = await _context.Notes.FindAsync(id);
+    if (note == null)
+        return NotFound();
+
+    _context.Notes.Remove(note);
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+}
+
 }
