@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,17 +21,24 @@ public class NotesController : ControllerBase
         _context = context;
     }
 
+    private int GetUserId()
+    {
+        return int.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var notes = await _context.Notes.ToListAsync();
+        var userId = GetUserId();
+        var notes = await _context.Notes.Where(n => n.UserId == userId).ToListAsync();
         return Ok(notes);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var note = await _context.Notes.FindAsync(id);
+        var userId = GetUserId();
+        var note = await _context.Notes.FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
         if (note == null)
             return NotFound();
 
@@ -37,47 +46,49 @@ public class NotesController : ControllerBase
     }
 
     [HttpPost]
-public async Task<IActionResult> Create(CreateNoteRequest request)
-{
-    var note = new Note
+    public async Task<IActionResult> Create(CreateNoteRequest request)
     {
-        Title = request.Title,
-        Content = request.Content
-    };
+        var note = new Note
+        {
+            Title = request.Title,
+            Content = request.Content,
+            UserId = GetUserId()
+        };
 
-    _context.Notes.Add(note);
-    await _context.SaveChangesAsync();
+        _context.Notes.Add(note);
+        await _context.SaveChangesAsync();
 
-    return CreatedAtAction(nameof(GetById), new { id = note.Id }, note);
-}
+        return CreatedAtAction(nameof(GetById), new { id = note.Id }, note);
+    }
 
-[HttpPut("{id}")]
-public async Task<IActionResult> Update(int id, UpdateNoteRequest request)
-{
-    var note = await _context.Notes.FindAsync(id);
-    if (note == null)
-        return NotFound();
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, UpdateNoteRequest request)
+    {
+        var userId = GetUserId();
+        var note = await _context.Notes.FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
+        if (note == null)
+            return NotFound();
 
-    note.Title = request.Title;
-    note.Content = request.Content;
-    note.UpdatedAt = DateTime.UtcNow;
+        note.Title = request.Title;
+        note.Content = request.Content;
+        note.UpdatedAt = DateTime.UtcNow;
 
-    await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-    return Ok(note);
-}
+        return Ok(note);
+    }
 
-[HttpDelete("{id}")]
-public async Task<IActionResult> Delete(int id)
-{
-    var note = await _context.Notes.FindAsync(id);
-    if (note == null)
-        return NotFound();
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userId = GetUserId();
+        var note = await _context.Notes.FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
+        if (note == null)
+            return NotFound();
 
-    _context.Notes.Remove(note);
-    await _context.SaveChangesAsync();
+        _context.Notes.Remove(note);
+        await _context.SaveChangesAsync();
 
-    return NoContent();
-}
-
+        return NoContent();
+    }
 }
